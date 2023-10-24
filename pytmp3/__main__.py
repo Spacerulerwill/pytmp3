@@ -34,10 +34,14 @@ def get_playlist_info_from_search_query(query:str) -> PlaylistInfo:
     playlist_url = first_result["link"]
     return get_playlist_info_from_url(playlist_url)
 
-def download_audio_from_url(output_path:str, url:str, on_progress: Optional[Callable[[Any, bytes, int], None]]=None):   
+def download_audio_from_url(output_path:str, url:str, on_progress: Optional[Callable[[Any, bytes, int], None]]=None, bar=None): 
+    if bar != None:
+        bar.text(f"Preparing download...")  
     yt = YouTube(url, on_progress_callback=on_progress)
     audios = yt.streams.filter(only_audio=True)
     selected_audio: Stream = max(audios, key=lambda audio : audio.bitrate)
+    if bar != None:
+        bar.text(f"Downloading {selected_audio.title}...")
     out_file = selected_audio.download(output_path)
     base, _ = os.path.splitext(out_file) 
     new_file = base + '.mp3'
@@ -46,19 +50,18 @@ def download_audio_from_url(output_path:str, url:str, on_progress: Optional[Call
     os.rename(out_file, new_file)
 
 def download_audio_from_url_progress_bar(output_path:str, url:str):
-     with alive_bar(manual=True, stats=False) as bar:
-        bar.text(f"Downloading {os.path.basename(output_path)}")
+    with alive_bar(manual=True, stats=False) as bar:
         def on_progress(stream: Stream, chunk: bytes, bytes_remaining: int):
             total_size = stream.filesize
             bytes_downloaded = total_size - bytes_remaining
             pct_completed = bytes_downloaded / total_size
             bar(pct_completed)
         
-        download_audio_from_url(output_path, url, on_progress)
+        download_audio_from_url(output_path, url, on_progress, bar)
 
 def multithread_bulk_download_audio_urls(output_path:str, urls:str):
     with alive_bar(manual=True, stats=False) as bar:
-        bar.text(f"Downloading {os.path.basename(output_path)}")
+        bar.text(f"Downloading {os.path.basename(output_path)}...")
         progress_dict = {}
         def on_progress(stream: Stream, chunk: bytes, bytes_remaining: int):
             total_size = stream.filesize
