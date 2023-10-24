@@ -41,7 +41,8 @@ def download_audio_from_url(output_path:str, url:str, on_progress: Optional[Call
     out_file = selected_audio.download(output_path)
     base, _ = os.path.splitext(out_file) 
     new_file = base + '.mp3'
-    os.remove(new_file)
+    with suppress(OSError):
+        os.remove(new_file)
     os.rename(out_file, new_file)
 
 def download_audio_from_url_progress_bar(output_path:str, url:str):
