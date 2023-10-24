@@ -109,3 +109,4 @@ if __name__ == "__main__":
         else:
             search_result = VideosSearch(video_query).result()
             download_audio_from_url_progress_bar(output_path, search_result["result"][0]["link"])
+            
