@@ -1,3 +1,7 @@
+# Install
+
+    pip install pytmp3
+
 # PYTMP3
 
 Easily download albums, playlists and songs off YouTube to MP3 format
