@@ -1,3 +1,5 @@
 youtube-search-python
 pytube
 alive-progress
+mutagen
+requests

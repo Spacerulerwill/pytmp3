@@ -6,7 +6,10 @@ from typing import Any, Optional, Callable
 from dataclasses import dataclass
 from functools import partial
 from contextlib import suppress
+from mutagen.id3 import ID3, APIC
+import subprocess
 import argparse
+import requests
 import os
 import re
 
@@ -37,17 +40,35 @@ def get_playlist_info_from_search_query(query:str) -> PlaylistInfo:
 def download_audio_from_url(output_path:str, url:str, on_progress: Optional[Callable[[Any, bytes, int], None]]=None, bar=None): 
     if bar != None:
         bar.text(f"Preparing download...")  
+
+    # Get video data from youtube, select highest quality stream
     yt = YouTube(url, on_progress_callback=on_progress)
     audios = yt.streams.filter(only_audio=True)
     selected_audio: Stream = max(audios, key=lambda audio : audio.bitrate)
     if bar != None:
         bar.text(f"Downloading {selected_audio.title}...")
+
+    # Download raw audio and determine filepath for new an mp3 file to replace it
     out_file = selected_audio.download(output_path)
     base, _ = os.path.splitext(out_file) 
     new_file = base + '.mp3'
+
+    # Using FFMPEG convert to an MP3
+    subprocess.call(f"ffmpeg -hide_banner -loglevel error -i \"{out_file}\" -ab 160k -ac 2 -ar 44100 -vn \"{new_file}\"", shell=True)
+
+    # Add Metadata to file and save it
+    audio = ID3(new_file)
+    audio['APIC'] = APIC(
+        encoding=3,
+        mime='image/jpeg',
+        type=3, desc=u'Cover',
+        data=requests.get(yt.thumbnail_url).content
+    )
+    audio.save()
+
+    # Remove the old audio file
     with suppress(OSError):
-        os.remove(new_file)
-    os.rename(out_file, new_file)
+        os.remove(out_file)
 
 def download_audio_from_url_progress_bar(output_path:str, url:str):
     with alive_bar(manual=True, stats=False) as bar:
