@@ -6,7 +6,7 @@ from typing import Any, Optional, Callable
 from dataclasses import dataclass
 from functools import partial
 from contextlib import suppress
-from mutagen.id3 import ID3, APIC
+from mutagen.id3 import ID3, APIC, TIT2, TALB, TPE1, TLE
 import subprocess
 import argparse
 import requests
@@ -37,7 +37,7 @@ def get_playlist_info_from_search_query(query:str) -> PlaylistInfo:
     playlist_url = first_result["link"]
     return get_playlist_info_from_url(playlist_url)
 
-def download_audio_from_url(output_path:str, url:str, on_progress: Optional[Callable[[Any, bytes, int], None]]=None, bar=None): 
+def download_audio_from_url(output_path:str, url:str, playlist_name:str = None, on_progress: Optional[Callable[[Any, bytes, int], None]]=None, bar=None): 
     if bar != None:
         bar.text(f"Preparing download...")  
 
@@ -55,15 +55,20 @@ def download_audio_from_url(output_path:str, url:str, on_progress: Optional[Call
 
     # Using FFMPEG convert to an MP3
     subprocess.call(f"ffmpeg -hide_banner -loglevel error -i \"{out_file}\" -ab 160k -ac 2 -ar 44100 -vn \"{new_file}\"", shell=True)
-
+    
     # Add Metadata to file and save it
     audio = ID3(new_file)
     audio['APIC'] = APIC(
         encoding=3,
         mime='image/jpeg',
-        type=3, desc=u'Cover',
+        type=3, desc='Cover',
         data=requests.get(yt.thumbnail_url).content
     )
+    if playlist_name is not None:
+        audio["TALB"] = TALB(encoding=3,text=playlist_name)
+    audio["TIT2"] = TIT2(encoding=3, text=yt.title)
+    audio["TPE1"] = TPE1(encoding=3,text=yt.author)
+    audio["TLE"] = TLE(encoding=3,text=str(yt.length * 1000))
     audio.save()
 
     # Remove the old audio file
@@ -80,7 +85,7 @@ def download_audio_from_url_progress_bar(output_path:str, url:str):
         
         download_audio_from_url(output_path, url, on_progress, bar)
 
-def multithread_bulk_download_audio_urls(output_path:str, urls:str):
+def multithread_bulk_download_audio_urls(output_path:str, urls:str, playlist_title:str):
     with alive_bar(manual=True, stats=False) as bar:
         bar.text(f"Downloading {os.path.basename(output_path)}...")
         progress_dict = {}
@@ -93,13 +98,13 @@ def multithread_bulk_download_audio_urls(output_path:str, urls:str):
             bar(total_pct_completed)
 
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-                executor.map(partial(download_audio_from_url, output_path, on_progress=on_progress), urls)
+            executor.map(partial(download_audio_from_url, output_path, playlist_name=playlist_title, on_progress=on_progress), urls)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-                    prog="ytmp3",
-                    description="Easily download albums, playlists and songs off YouTube to MP3 format",
-                    epilog="⭐ Please star on GitHub! (https://github.com/Spacerulerwill/ytmp3) ⭐"
+        prog="pytmp3",
+        description="Easily download albums, playlists and songs off YouTube to MP3 format",
+        epilog="⭐ Please star on GitHub! (https://github.com/Spacerulerwill/pytmp3) ⭐"
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-p", "--playlist", help="Playlist or album search query or url", nargs="+")
@@ -124,7 +129,7 @@ if __name__ == "__main__":
         with suppress(FileExistsError):
             os.mkdir(output_folder)
 
-        multithread_bulk_download_audio_urls(output_folder, playlist_info.video_urls)
+        multithread_bulk_download_audio_urls(output_folder, playlist_info.video_urls, playlist_info.title)
 
     elif video_input is not None:
         video_query = "".join(video_input)
