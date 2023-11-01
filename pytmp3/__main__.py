@@ -83,7 +83,7 @@ def download_audio_from_url_progress_bar(output_path:str, url:str):
             pct_completed = bytes_downloaded / total_size
             bar(pct_completed)
         
-        download_audio_from_url(output_path, url, on_progress, bar)
+        download_audio_from_url(output_path, url, None, on_progress, bar)
 
 def multithread_bulk_download_audio_urls(output_path:str, urls:str, playlist_title:str):
     with alive_bar(manual=True, stats=False) as bar:
