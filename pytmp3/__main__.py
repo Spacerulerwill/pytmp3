@@ -107,8 +107,8 @@ if __name__ == "__main__":
         epilog="⭐ Please star on GitHub! (https://github.com/Spacerulerwill/pytmp3) ⭐"
     )
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-p", "--playlist", help="Playlist or album search query or url", nargs="+")
-    group.add_argument("-v", "--video", help="Song search query or url", nargs="+")
+    group.add_argument("-a", "--album", help="Playlist or album search query or url", nargs="+")
+    group.add_argument("-s", "--song", help="Song search query or url", nargs="+")
     parser.add_argument('-o', "--output", help="Output location for playlist, album or song. Defaults to downloads folder.", default=os.path.expanduser('~/Downloads'))
     args = parser.parse_args()
 
@@ -119,6 +119,7 @@ if __name__ == "__main__":
     if playlist_input is not None:
         playlist_query = "".join(playlist_input)
 
+        # if we have a playlist, determine if it is a playlist url or a search query
         if bool(re.match(PLAYLIST_REGEX, playlist_query)):
             playlist_info = get_playlist_info_from_url(playlist_query)
         else:
@@ -134,6 +135,7 @@ if __name__ == "__main__":
     elif video_input is not None:
         video_query = "".join(video_input)
 
+        # if we have a video query, determine if its a video url or a search query
         if bool(re.match(VIDEO_REGEX, video_query)):
             download_audio_from_url_progress_bar(output_path, video_query)
         else:
