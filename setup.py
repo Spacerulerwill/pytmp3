@@ -10,7 +10,7 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 with open("requirements.txt") as f:
     requirements = [line.strip() for line in f.readlines()]
 
-VERSION = '0.0.5'
+VERSION = '0.0.6'
 DESCRIPTION = ' Easily download albums, playlists and songs off YouTube to MP3 format'
 
 # Setting up
