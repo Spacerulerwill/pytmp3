@@ -109,31 +109,30 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-a", "--album", help="Playlist or album search query or url", nargs="+")
     group.add_argument("-s", "--song", help="Song search query or url", nargs="+")
-    parser.add_argument('-o', "--output", help="Output location for playlist, album or song. Defaults to downloads folder.", default=os.path.expanduser('~/Downloads'))
+    parser.add_argument('-o', "--output", help="Output location for playlist, album or song, relative to current working directory.", default=os.getcwd())
     args = parser.parse_args()
 
-    playlist_input:list[str] = args.playlist
-    video_input:list[str] = args.video
+    album_input:list[str] = args.album
+    song_input:list[str] = args.song
     output_path:str = args.output
 
-    if playlist_input is not None:
-        playlist_query = "".join(playlist_input)
+    if album_input is not None:
+        album_query = "".join(album_input)
 
         # if we have a playlist, determine if it is a playlist url or a search query
-        if bool(re.match(PLAYLIST_REGEX, playlist_query)):
-            playlist_info = get_playlist_info_from_url(playlist_query)
+        if bool(re.match(PLAYLIST_REGEX, album_query)):
+            playlist_info = get_playlist_info_from_url(album_query)
         else:
-            playlist_info = get_playlist_info_from_search_query(playlist_query)
+            playlist_info = get_playlist_info_from_search_query(album_query)
 
         output_folder = os.path.join(output_path, playlist_info.title)
 
         with suppress(FileExistsError):
-            os.mkdir(output_folder)
-
+            os.makedirs(output_folder, exist_ok=True)
         multithread_bulk_download_audio_urls(output_folder, playlist_info.video_urls, playlist_info.title)
 
-    elif video_input is not None:
-        video_query = "".join(video_input)
+    elif song_input is not None:
+        video_query = "".join(song_input)
 
         # if we have a video query, determine if its a video url or a search query
         if bool(re.match(VIDEO_REGEX, video_query)):
