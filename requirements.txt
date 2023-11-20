@@ -3,3 +3,4 @@ pytube
 alive-progress
 mutagen
 requests
+black
