@@ -6,7 +6,7 @@
 
 Easily download albums, playlists and songs off YouTube to MP3 format
 
-    python3 -m pytmp3 [-a ALBUM] | [-s SONG]
+    python -m pytmp3 [-a ALBUM] | [-s SONG]
 
     options:
     -h, --help            show this help message and exit
