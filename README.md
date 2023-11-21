@@ -15,6 +15,6 @@ Easily download albums, playlists and songs off YouTube to MP3 format
     -s SONG [SONG ...], --song SONG [SONG ...]
                             Song or video search query or url
     -o OUTPUT, --output OUTPUT
-                            Output location for playlist, album or song. Defaults to downloads folder.
+                            Output location for playlist, album or song relative to the current working directory
 
     ⭐ Please star! ⭐
